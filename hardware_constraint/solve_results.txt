@@ -1,0 +1,24 @@
+conda-forge today | nehalem | polars | polars-runtime-32=2.1.0=py311hb519a9e_0 polars=2.1.0=pyh3138b34_0
+conda-forge today | nehalem | polars=2.1.0 | polars-runtime-32=2.1.0=py311hb519a9e_0 polars=2.1.0=pyh3138b34_0
+conda-forge today | nehalem | polars polars-runtime-compat | polars-runtime-32=2.1.0=py311hb519a9e_0 polars-runtime-compat=2.1.0=py311haeeaf9e_0 polars=2.1.0=pyh3138b34_0
+conda-forge today | nehalem | polars=2.1.0 polars-runtime-compat | polars-runtime-32=2.1.0=py311hb519a9e_0 polars-runtime-compat=2.1.0=py311haeeaf9e_0 polars=2.1.0=pyh3138b34_0
+conda-forge today | skylake | polars | polars-runtime-32=2.1.0=py311hb519a9e_0 polars=2.1.0=pyh3138b34_0
+conda-forge today | skylake | polars=2.1.0 | polars-runtime-32=2.1.0=py311hb519a9e_0 polars=2.1.0=pyh3138b34_0
+conda-forge today | skylake | polars polars-runtime-compat | polars-runtime-32=2.1.0=py311hb519a9e_0 polars-runtime-compat=2.1.0=py311haeeaf9e_0 polars=2.1.0=pyh3138b34_0
+conda-forge today | skylake | polars=2.1.0 polars-runtime-compat | polars-runtime-32=2.1.0=py311hb519a9e_0 polars-runtime-compat=2.1.0=py311haeeaf9e_0 polars=2.1.0=pyh3138b34_0
+repodata patch | nehalem | polars | polars-default=1.33.1=py310h8278905_1 polars=1.33.1=default_h11bb3fb_1
+repodata patch | nehalem | polars=2.1.0 | UNSOLVABLE: LibMambaUnsatisfiableError: Encountered problems while solving: - nothing provides __archspec 1 broadwell needed by _x86_64-microarch-level-3-0_broadwell
+repodata patch | nehalem | polars polars-runtime-compat | polars-default=1.33.1=py310h8278905_1 polars-runtime-compat=2.1.0=py311haeeaf9e_0 polars=1.33.1=default_h11bb3fb_1
+repodata patch | nehalem | polars=2.1.0 polars-runtime-compat | UNSOLVABLE: LibMambaUnsatisfiableError: Encountered problems while solving: - nothing provides __archspec 1 broadwell needed by _x86_64-microarch-level-3-0_broadwell
+repodata patch | skylake | polars | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v3 polars=2.1.0=pyh3138b34_0
+repodata patch | skylake | polars=2.1.0 | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v3 polars=2.1.0=pyh3138b34_0
+repodata patch | skylake | polars polars-runtime-compat | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v3 polars-runtime-compat=2.1.0=py311haeeaf9e_0 polars=2.1.0=pyh3138b34_0
+repodata patch | skylake | polars=2.1.0 polars-runtime-compat | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v3 polars-runtime-compat=2.1.0=py311haeeaf9e_0 polars=2.1.0=pyh3138b34_0
+feedstock variants | nehalem | polars | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v2 polars=2.1.0=pyh3138b34_0
+feedstock variants | nehalem | polars=2.1.0 | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v2 polars=2.1.0=pyh3138b34_0
+feedstock variants | nehalem | polars polars-runtime-compat | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v2 polars-runtime-compat=2.1.0=py311haeeaf9e_0 polars=2.1.0=pyh3138b34_0
+feedstock variants | nehalem | polars=2.1.0 polars-runtime-compat | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v2 polars-runtime-compat=2.1.0=py311haeeaf9e_0 polars=2.1.0=pyh3138b34_0
+feedstock variants | skylake | polars | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v3 polars=2.1.0=pyh3138b34_0
+feedstock variants | skylake | polars=2.1.0 | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v3 polars=2.1.0=pyh3138b34_0
+feedstock variants | skylake | polars polars-runtime-compat | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v3 polars-runtime-compat=2.1.0=py311haeeaf9e_0 polars=2.1.0=pyh3138b34_0
+feedstock variants | skylake | polars=2.1.0 polars-runtime-compat | polars-runtime-32=2.1.0=py311hb519a9e_0_x86_64_v3 polars-runtime-compat=2.1.0=py311haeeaf9e_0 polars=2.1.0=pyh3138b34_0

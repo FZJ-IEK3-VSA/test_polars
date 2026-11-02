@@ -146,8 +146,13 @@ def main():
     summary = []
     for runtime, flags in build_flags.items():
         missing = [f for f in flags if not cpuid_flags.get(f)]
-        if not cpuid_flags or not flags:
+        if not cpuid_flags:
             line = f"runtime {runtime}: no CPU feature check on this architecture"
+        elif not flags:
+            line = (
+                f"runtime {runtime}: does not record the features it was built for, "
+                "so polars cannot check the CPU"
+            )
         elif missing:
             line = f"runtime {runtime}: CPU lacks {', '.join(missing)}, importing it will likely crash"
         else:

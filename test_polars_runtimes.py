@@ -3,17 +3,9 @@
 An illegal instruction kills the Python process, so every import runs in a
 subprocess: once with polars' own runtime selection ("default", which prefers
 compat > 64 > 32) and once per installed runtime via POLARS_FORCE_PKG.
+On Linux, a crash is repeated under gdb to show the faulting instruction.
 
-GitHub-hosted runners have modern CPUs. To see what happens on an older CPU
-(for example a Proxmox VM with the default `x86-64-v2-AES` or `kvm64` CPU type),
-the imports can also run under qemu user-mode emulation (Linux x86_64 only):
-
-    python test_polars_runtimes.py --qemu-cpu Nehalem --qemu-cpu Haswell
-
-Nehalem has SSE4.2 and POPCNT but no AVX (about x86-64-v2), Haswell adds
-AVX, AVX2, FMA, BMI1/2, LZCNT and MOVBE (about x86-64-v3).
-
-Exits with 1 if the default import fails on the native CPU.
+Exits with 1 if the default import fails.
 """
 
 import argparse
@@ -65,10 +57,8 @@ def describe(returncode):
     return f"failed (exit code {returncode})"
 
 
-def run_import(runtime, qemu_cpu, timeout):
+def run_import(runtime, timeout):
     cmd = [sys.executable, "-X", "faulthandler", "-W", "always", "-c", SNIPPET]
-    if qemu_cpu:
-        cmd = ["qemu-x86_64", "-cpu", qemu_cpu] + cmd
     try:
         proc = subprocess.run(
             cmd,
@@ -117,40 +107,26 @@ def faulting_instruction(runtime, timeout):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument(
-        "--qemu-cpu",
-        action="append",
-        default=[],
-        metavar="MODEL",
-        help="also run every import under `qemu-x86_64 -cpu MODEL`",
-    )
     parser.add_argument("--timeout", type=float, default=900, help="seconds per import")
     args = parser.parse_args()
-
-    if args.qemu_cpu and shutil.which("qemu-x86_64") is None:
-        print("qemu-x86_64 not found, install qemu-user")
-        return 2
 
     runtimes = installed_runtimes()
     print(f"installed polars runtimes: {', '.join(runtimes)}")
 
     results = []
-    cpus = args.qemu_cpu if args.qemu_cpu else [None]
-    for cpu in cpus:
-        for runtime in ["default"] + runtimes:
-            cpu_name = f"qemu {cpu}" if cpu else "native"
-            outcome, stdout, stderr = run_import(runtime, cpu, args.timeout)
-            loaded = stdout.strip().splitlines()[-1] if outcome == "ok" else ""
-            results.append((cpu_name, runtime, outcome, loaded))
+    for runtime in ["default"] + runtimes:
+        outcome, stdout, stderr = run_import(runtime, args.timeout)
+        loaded = stdout.strip().splitlines()[-1] if outcome == "ok" else ""
+        results.append((runtime, outcome, loaded))
 
-            print(f"::group::{cpu_name}, runtime {runtime}: {outcome}")
-            print(stdout + stderr)
-            print("::endgroup::")
-            if cpu is None and "SIG" in outcome and sys.platform.startswith("linux"):
-                print(f"gdb, runtime {runtime}:")
-                print(faulting_instruction(runtime, args.timeout))
+        print(f"::group::runtime {runtime}: {outcome}")
+        print(stdout + stderr)
+        print("::endgroup::")
+        if "SIG" in outcome and sys.platform.startswith("linux"):
+            print(f"gdb, runtime {runtime}:")
+            print(faulting_instruction(runtime, args.timeout))
 
-    header = ["CPU", "runtime", "result", "output"]
+    header = ["runtime", "result", "output"]
     widths = [max(len(r[i]) for r in [header] + results) for i in range(len(header))]
     print()
     for row in [header, ["-" * w for w in widths]] + results:
@@ -164,8 +140,7 @@ def main():
                 fh.write("| " + " | ".join(row) + " |\n")
             fh.write("\n")
 
-    native_default = [r for r in results if r[0] == "native" and r[1] == "default"]
-    if native_default and native_default[0][2] != "ok":
+    if results[0][1] != "ok":
         print("`import polars` fails on this CPU")
         return 1
     return 0

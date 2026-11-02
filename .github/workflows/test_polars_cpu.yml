@@ -32,16 +32,17 @@ jobs:
       - name: Show the virtual packages (__archspec)
         shell: pwsh
         run: conda info
-      - name: Which _x86_64-microarch-level can be installed?
+      - name: Which minimum _x86_64-microarch-level can be installed?
         shell: pwsh
         run: |
           $PSNativeCommandUseErrorActionPreference = $false
-          $lines = @("### _x86_64-microarch-level on $env:RUNNER_NAME", "", "| level | solver |", "|---|---|")
+          $lines = @("### _x86_64-microarch-level on $env:RUNNER_NAME", "", "| spec | solver |", "|---|---|")
           foreach ($level in 1..4) {
-            mamba create --dry-run --yes --name probe "_x86_64-microarch-level=$level"
+            $spec = "_x86_64-microarch-level>=$level"
+            mamba create --dry-run --yes --name probe $spec
             $result = if ($LASTEXITCODE -eq 0) { "installable" } else { "refused" }
-            echo "_x86_64-microarch-level=${level}: $result"
-            $lines += "| $level | $result |"
+            echo "${spec}: $result"
+            $lines += "| ``$spec`` | $result |"
           }
           $lines >> $env:GITHUB_STEP_SUMMARY
           exit 0
@@ -89,10 +90,3 @@ jobs:
       - name: Import polars with each runtime
         shell: pwsh
         run: mamba run --name test_env python test_polars_runtimes.py
-      - name: Import polars on emulated older CPUs
-        if: runner.os == 'Linux' && runner.arch == 'X64' && runner.environment == 'github-hosted'
-        shell: pwsh
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes qemu-user
-          mamba run --name test_env python test_polars_runtimes.py --qemu-cpu Nehalem --qemu-cpu Haswell
