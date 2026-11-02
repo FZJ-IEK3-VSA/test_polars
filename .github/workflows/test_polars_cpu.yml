@@ -1,0 +1,98 @@
+name: polars runtimes and CPU features
+
+# Only push and manual runs: this public repository uses the organization's
+# self-hosted runners, so pull requests from forks must not start jobs.
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+    inputs:
+      runners:
+        description: JSON list of runners
+        default: '["self-hosted", "ubuntu-latest"]'
+
+jobs:
+  # conda describes the CPU with the virtual package __archspec. conda-forge
+  # packages declare a minimum x86-64 level by depending on
+  # _x86_64-microarch-level >=N, which is only installable if __archspec is
+  # a microarchitecture of that level or newer.
+  MicroarchLevel:
+    name: x86-64 level as conda sees it os=${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.runners || '["self-hosted", "ubuntu-latest"]') }}
+    steps:
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          channels: conda-forge
+          conda-remove-defaults: true
+      - name: Show the virtual packages (__archspec)
+        shell: pwsh
+        run: conda info
+      - name: Which _x86_64-microarch-level can be installed?
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          $lines = @("### _x86_64-microarch-level on $env:RUNNER_NAME", "", "| level | solver |", "|---|---|")
+          foreach ($level in 1..4) {
+            mamba create --dry-run --yes --name probe "_x86_64-microarch-level=$level"
+            $result = if ($LASTEXITCODE -eq 0) { "installable" } else { "refused" }
+            echo "_x86_64-microarch-level=${level}: $result"
+            $lines += "| $level | $result |"
+          }
+          $lines >> $env:GITHUB_STEP_SUMMARY
+          exit 0
+
+  TestPolarsRuntimes:
+    name: polars=${{ matrix.polars_version }} extra=${{ matrix.extra || 'none' }} os=${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.runners || '["self-hosted", "ubuntu-latest"]') }}
+        polars_version: ["1.44.2", "2.0.0", "2.1.0"]
+        # polars always pulls in polars-runtime-32, the extras decide whether
+        # polars-runtime-compat (for older CPUs) is installed next to it:
+        # wombat <=0.13.4 depends on polars-lts-cpu, which depends on
+        # polars-runtime-compat; wombat 0.13.5 dropped polars-lts-cpu.
+        extra: ["", "polars-runtime-compat", "wombat=0.13.4", "wombat=0.13.5"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          channels: conda-forge
+          conda-remove-defaults: true
+      - name: Show the runner's CPU as conda sees it (__archspec)
+        shell: pwsh
+        run: |
+          echo "Runner: $env:RUNNER_NAME"
+          conda info
+      - name: Install
+        shell: pwsh
+        run: |
+          $specs = @("python=3.12", "polars=${{ matrix.polars_version }}", "archspec")
+          if ("${{ matrix.extra }}") { $specs += "${{ matrix.extra }}" }
+          if ($IsLinux) { $specs += "gdb" }
+          mamba create --yes --name test_env @specs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          echo "Installation done"
+          mamba list --name test_env
+      - name: Compare CPU features with the polars runtimes
+        shell: pwsh
+        run: mamba run --name test_env python polars_cpu_report.py
+      - name: Import polars with each runtime
+        shell: pwsh
+        run: mamba run --name test_env python test_polars_runtimes.py
+      - name: Import polars on emulated older CPUs
+        if: runner.os == 'Linux' && runner.arch == 'X64' && runner.environment == 'github-hosted'
+        shell: pwsh
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes qemu-user
+          mamba run --name test_env python test_polars_runtimes.py --qemu-cpu Nehalem --qemu-cpu Haswell
